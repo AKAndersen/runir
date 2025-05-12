@@ -18,9 +18,52 @@
     --foreground: #ededed;
   }
 }
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+html,
+body {
+  @apply h-full w-full overflow-hidden m-0 p-0;
+}
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Unica One', sans-serif;
+
 }
+
+p {
+  font-family: 'DM Sans', sans-serif;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(-0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+@keyframes spin-smooth {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-smooth {
+  animation: spin-smooth 3s linear infinite;
+}
+
