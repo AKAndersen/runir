@@ -17,10 +17,11 @@ export default function Navbar() {
             className="flex space-x-8 text-lg font-bold tracking-wide uppercase"
             style={{ fontFamily: "'Unica One', sans-serif" }}
           >
-            <Link href="/videos" className="hover:text-yellow-400 transition">Videos</Link>
-            <Link href="/comics" className="hover:text-yellow-400 transition">Comics</Link>
+            <Link href="/video" className="hover:text-yellow-400 transition">Videos</Link>
+            <Link href="/comic" className="hover:text-yellow-400 transition">Comics</Link>
             <Link href="/music" className="hover:text-yellow-400 transition">Music</Link>
-            <Link href="/articles" className="hover:text-yellow-400 transition">Articles</Link>
+            <Link href="/article" className="hover:text-yellow-400 transition">Articles</Link>
+            <Link href="/trove" className="hover:text-yellow-400 transition">The Trove</Link>
           </div>
 
           {/* Right nav links */}
@@ -32,6 +33,7 @@ export default function Navbar() {
             <Link href="/about" className="hover:text-yellow-400 transition">About</Link>
             <Link href="/contact" className="hover:text-yellow-400 transition">Contact</Link>
             <Link href="/lounge" className="hover:text-yellow-400 transition">The Lounge</Link>
+            <Link href="/vault" className="hover:text-yellow-400 transition">The Vault</Link>
           </div>
         </div>
 

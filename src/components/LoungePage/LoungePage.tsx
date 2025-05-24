@@ -8,70 +8,89 @@ import {
   onChildAdded,
   limitToLast,
   query,
+  get,
 } from "firebase/database";
+
+type ChatMessage = {
+  content: string;
+  createdAt: number;
+};
 
 export default function LoungePage() {
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<string[]>([]);
-  const [fadeIndex, setFadeIndex] = useState<number | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
+  const maxWords = 30;
+  const wordCount = input.trim().split(/\s+/).filter(Boolean).length;
+  const wordsLeft = maxWords - wordCount;
+
   useEffect(() => {
-    const messagesRef = query(ref(db, "lounge-messages"), limitToLast(6));
-    onChildAdded(messagesRef, (snapshot) => {
-      const msg = snapshot.val();
-      setMessages((prev) => {
-        const next = [...prev, msg];
-        if (next.length > 6) {
-          setFadeIndex(0);
-          setTimeout(() => {
-            setMessages(next.slice(1));
-            setFadeIndex(null);
-          }, 1000);
-        }
-        return next;
-      });
+    const messagesRef = query(ref(db, "lounge-messages"), limitToLast(50));
+
+    get(messagesRef).then((snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const list = Object.values(data) as ChatMessage[];
+        setMessages(list);
+      }
     });
 
-    const audio = audioRef.current;
-    const tryPlay = () => {
-      audio?.play().catch(() => {});
-    };
+    onChildAdded(messagesRef, (snapshot) => {
+      const msg = snapshot.val() as ChatMessage;
+      if (msg?.content) {
+        setMessages((prev) => [...prev, msg]);
+      }
+    });
+
+    // Declare audio inside the effect and reuse it in cleanup
+    const audioEl = audioRef.current;
 
     const updateState = () => {
-      if (!audio) return;
-      setIsPlaying(!audio.paused);
+      if (audioEl) {
+        setIsPlaying(!audioEl.paused);
+      }
     };
 
-    // Listen to audio events
-    audio?.addEventListener("play", updateState);
-    audio?.addEventListener("pause", updateState);
-    window.addEventListener("click", tryPlay);
+    if (audioEl) {
+      audioEl.addEventListener("play", updateState);
+      audioEl.addEventListener("pause", updateState);
+    }
 
     return () => {
-      audio?.removeEventListener("play", updateState);
-      audio?.removeEventListener("pause", updateState);
-      window.removeEventListener("click", tryPlay);
+      if (audioEl) {
+        audioEl.removeEventListener("play", updateState);
+        audioEl.removeEventListener("pause", updateState);
+      }
     };
   }, []);
+
+  const handleSubmit = () => {
+    const trimmed = input.trim();
+    if (!trimmed || wordCount > maxWords) return;
+
+    push(ref(db, "lounge-messages"), {
+      content: trimmed,
+      createdAt: Date.now(),
+    });
+
+    setInput("");
+  };
 
   const toggleMusic = () => {
     const audio = audioRef.current;
     if (!audio) return;
-    audio.paused ? audio.play() : audio.pause();
-  };
-
-  const handleSubmit = () => {
-    const trimmed = input.trim();
-    if (!trimmed) return;
-    push(ref(db, "lounge-messages"), trimmed);
-    setInput("");
+    if (audio.paused) {
+      audio.play();
+    } else {
+      audio.pause();
+    }
   };
 
   return (
     <div className="fixed inset-0 w-full h-screen overflow-hidden">
-      {/* 🔥 Fireplace Video */}
+      {/* 🔥 Fireplace Background Video */}
       <video
         className="fixed top-0 left-0 w-screen h-screen object-cover -z-10"
         autoPlay
@@ -85,50 +104,67 @@ export default function LoungePage() {
       {/* 🎵 Background Music */}
       <audio ref={audioRef} src="/music.mp3" loop />
 
-      {/* 🎚 Toggle Button */}
+      {/* 🎚 Music Toggle Button */}
       <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-20">
         <button
           onClick={toggleMusic}
-          className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold px-6 py-3 rounded shadow-md transition mt-80"
+          className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold px-6 py-3 rounded shadow-md transition mt-50"
         >
           {isPlaying ? "Enjoy the silence" : "Start Music 🎵"}
         </button>
       </div>
 
-      {/* 💬 Chat Overlay */}
+      {/* 💬 Chat UI */}
       <div className="relative z-10 flex flex-col justify-end items-center w-full h-full bg-black/25 p-8">
-        <div className="w-full max-w-xl mb-8 space-y-2 overflow-y-auto max-h-90">
-          {messages.map((msg, i) => (
+        {/* Comment List */}
+        <div className="w-full max-w-xl mb-8 space-y-2 overflow-y-auto max-h-[400px]">
+          {messages.slice(-6).map((msg, i) => (
             <div
-              key={i}
-              className={`text-white text-2xl text-center transition-opacity duration-1000 ${
-                i === fadeIndex ? "opacity-0" : "opacity-100"
-              }`}
+              key={msg.createdAt + i}
+              className="text-white text-2xl text-center transition-opacity duration-1000"
             >
-              {msg}
+              {msg.content}
             </div>
           ))}
         </div>
 
+        {/* Input Box */}
         <div className="w-full max-w-xl text-center">
           <h2 className="text-white text-xl mb-2 font-semibold uppercase tracking-wide">
             Speak freely.
           </h2>
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-              placeholder="Say something..."
-              className="flex-1 px-4 py-2 border border-white bg-black/30 text-white placeholder-white/60 rounded-md focus:outline-none"
-            />
-            <button
-              onClick={handleSubmit}
-              className="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded-md font-bold"
+          <div className="flex flex-col items-center gap-2">
+            <div className="flex w-full items-center gap-2">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => {
+                  const words = e.target.value
+                    .trim()
+                    .split(/\s+/)
+                    .filter(Boolean);
+                  if (words.length <= maxWords) {
+                    setInput(e.target.value);
+                  }
+                }}
+                onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+                placeholder="Say something..."
+                className="flex-1 px-4 py-2 border border-white bg-black/30 text-white placeholder-white/60 rounded-md focus:outline-none"
+              />
+              <button
+                onClick={handleSubmit}
+                className="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded-md font-bold"
+              >
+                Post
+              </button>
+            </div>
+            <p
+              className={`text-sm ${
+                wordsLeft < 5 ? "text-yellow-400" : "text-white/60"
+              }`}
             >
-              Post
-            </button>
+              {wordsLeft} {wordsLeft === 1 ? "word" : "words"} left
+            </p>
           </div>
         </div>
       </div>

@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import albumArt from "@/assets/hljod.png";
-import vinyl from "@/assets/vinyl.png";
+import albumArt from "../../assets/hljod.png";
+import vinyl from "../../assets/vinyl.png";
 
 export default function MusicSection() {
   const [hover, setHover] = useState(false);

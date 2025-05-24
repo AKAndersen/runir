@@ -1,5 +1,5 @@
 import Image from "next/image";
-import heroImage from "@/assets/heroImg.jpg";
+import heroImage from "../../assets/heroImg.jpg";
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 

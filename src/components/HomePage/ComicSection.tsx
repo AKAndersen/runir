@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import gesturCover from "@/assets/gestur.png";
-import gesturBg from "@/assets/Gestur-poster.png";
-import gesturLogo from "@/assets/GesturLogo.png";
+import gesturCover from "../../assets/gestur.png";
+import gesturBg from "../../assets/Gestur-poster.png";
+import gesturLogo from "../../assets/GesturLogo.png";
 
 export default function ComicSection() {
   return (

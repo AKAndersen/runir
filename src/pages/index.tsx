@@ -1,4 +1,4 @@
-import {HeroSection, VideoSection, ComicSection, MusicSection} from "@/components/HomePage/";
+import {HeroSection, VideoSection, ComicSection, MusicSection} from "../components/HomePage/";
 
 
 export default function Home() {
